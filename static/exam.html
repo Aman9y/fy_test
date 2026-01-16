@@ -226,8 +226,12 @@
                 .then(data => {
                     if (data.success) {
                         localStorage.setItem('examResult', JSON.stringify(data));
-                        alert('Time is up! Your exam has been submitted automatically.');
-                        window.location.href = 'result.html';
+                        // Logout after auto-submit
+                        fetch('/api/logout', { method: 'POST', credentials: 'include' })
+                            .then(() => {
+                                alert('Time is up! Your exam has been submitted automatically.');
+                                window.location.href = 'result.html';
+                            });
                     } else {
                         alert(data.message);
                     }
