@@ -110,9 +110,24 @@
         <!-- Sessions Tab -->
         <div id="sessions" class="tab-content">
             <h2>User Sessions</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="activeCount">0</h3>
+                    <p>Active Sessions</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="inactiveCount">0</h3>
+                    <p>Inactive Sessions</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalCount">0</h3>
+                    <p>Total Sessions</p>
+                </div>
+            </div>
             <table id="sessionsTable">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Username</th>
                         <th>IP Address</th>
                         <th>Login Time</th>
@@ -498,17 +513,33 @@
                 
                 const tbody = document.querySelector('#sessionsTable tbody');
                 if (data.sessions && data.sessions.length > 0) {
-                    tbody.innerHTML = data.sessions.map(s => `
+                    let activeCount = 0;
+                    let inactiveCount = 0;
+                    
+                    tbody.innerHTML = data.sessions.map((s, idx) => {
+                        if (s.is_active) activeCount++;
+                        else inactiveCount++;
+                        
+                        return `
                         <tr>
+                            <td>${idx + 1}</td>
                             <td>${s.username}</td>
                             <td>${s.ip_address || 'N/A'}</td>
                             <td>${s.login_time}</td>
                             <td>${s.logout_time || '-'}</td>
                             <td>${s.is_active ? '🟢 Active' : '⚫ Logged Out'}</td>
-                        </tr>
-                    `).join('');
+                        </tr>`;
+                    }).join('');
+                    
+                    // Update counters
+                    document.getElementById('activeCount').textContent = activeCount;
+                    document.getElementById('inactiveCount').textContent = inactiveCount;
+                    document.getElementById('totalCount').textContent = data.sessions.length;
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No sessions yet</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No sessions yet</td></tr>';
+                    document.getElementById('activeCount').textContent = '0';
+                    document.getElementById('inactiveCount').textContent = '0';
+                    document.getElementById('totalCount').textContent = '0';
                 }
             } catch (err) {
                 console.error('Error loading sessions:', err);
