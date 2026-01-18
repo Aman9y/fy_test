@@ -43,7 +43,9 @@
             document.getElementById('percentage').textContent = `${percentage}%`;
             
             let message = '';
-            if (percentage >= 80) {
+            if (result.penalty && result.penalty > 0) {
+                message = `⚠️ ${result.penalty} marks deducted for tab switching (Original: ${result.original_score})`;
+            } else if (percentage >= 80) {
                 message = '🎉 Excellent! Outstanding performance!';
             } else if (percentage >= 60) {
                 message = '👍 Good job! Well done!';

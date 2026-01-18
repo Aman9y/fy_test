@@ -231,9 +231,18 @@ def submit_exam():
                 if selected == question['correct_answer']:
                     score += 1
             
+            # Get tab switch penalty
+            tab_switches = conn.execute('SELECT MAX(switch_count) FROM tab_switches WHERE user_id = ?',
+                                        (session['user_id'],)).fetchone()
+            max_switches = tab_switches[0] if tab_switches[0] else 0
+            
+            # Apply penalty: subtract 1 mark for each tab switch after 2
+            penalty = max(0, max_switches - 2)
+            final_score = max(0, score - penalty)
+            
             # Save result
             conn.execute('INSERT INTO results (user_id, ip_address, score, total_questions) VALUES (?, ?, ?, ?)',
-                         (session['user_id'], get_client_ip(), score, len(question_ids)))
+                         (session['user_id'], get_client_ip(), final_score, len(question_ids)))
             
             # Mark as attempted
             conn.execute('UPDATE users SET attempted = 1 WHERE id = ?', (session['user_id'],))
@@ -241,12 +250,14 @@ def submit_exam():
             # Delete active exam
             conn.execute('DELETE FROM active_exams WHERE user_id = ?', (session['user_id'],))
             
-            logger.info(f"User {session['user_id']} submitted exam. Score: {score}/{len(question_ids)}")
+            logger.info(f"User {session['user_id']} submitted exam. Score: {score}, Penalty: {penalty}, Final: {final_score}")
             
             return jsonify({
                 'success': True,
-                'score': score,
-                'total': len(question_ids)
+                'score': final_score,
+                'total': len(question_ids),
+                'penalty': penalty,
+                'original_score': score
             })
     except Exception as e:
         logger.error(f"Exam submission error: {e}")
